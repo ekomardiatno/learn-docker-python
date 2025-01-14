@@ -8,10 +8,11 @@ COPY app/ /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Set environment variables for production
-ENV FLASK_ENV=production
-ENV FLASK_DEBUG=0
+ENV FLASK_ENV=development
 
 EXPOSE 5000
 
-# CMD ["python", "app.py"]
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
+# command for production environment
+# CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
+
+CMD ["python", "app.py"]
