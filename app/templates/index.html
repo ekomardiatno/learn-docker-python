@@ -1,26 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Docker Flask App</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
     <div class="container text-center mt-5">
-        <h1 class="mb-4">Hello, Docker!</h1>
-        {% if logged_in %}
-            <p class="lead">Welcome back, {{ username }}! You have visited this page <strong>{{ visit_count }}</strong> times.</p>
-            <a href="/logout" class="btn btn-warning btn-lg">Logout</a>
-        {% else %}
-            <p class="lead">You are not logged in.</p>
-            <a href="/login" class="btn btn-primary btn-lg">Login</a>
-        {% endif %}
-        <div class="mt-4">
-            <form action="{{ url_for('reset') }}" method="get">
-                <button type="submit" class="btn btn-danger btn-lg">Reset Visit Count</button>
-            </form>
-        </div>
+      <h1 class="mb-4">Hello, Docker!</h1>
+      {% if logged_in %}
+      <p class="lead">
+        Welcome back, {{ username }}! You have visited this page
+        <strong>{{ visit_count }}</strong> times.
+      </p>
+      <a href="/logout" class="btn btn-warning btn-lg">Logout</a>
+      {% else %}
+      <p class="lead">You are not logged in.</p>
+      <a href="/login" class="btn btn-primary btn-lg">Login</a>
+      {% endif %}
+      <div class="mt-5">
+        <a href="/leaderboard" class="btn btn-info btn-lg">View Leaderboard</a>
+      </div>
+      <div class="mt-4">
+        <form action="{{ url_for('reset') }}" method="get">
+          <button type="submit" class="btn btn-danger btn-lg">
+            Reset Visit Count
+          </button>
+        </form>
+      </div>
     </div>
-</body>
+  </body>
 </html>

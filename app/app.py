@@ -21,13 +21,10 @@ def home():
 	if 'username' in session:
 		# Get and increase the current user's visit count from Redis
 		username = session['username']
-		visit_count = r.incr(f'{username}_visit_count')
-		if visit_count is None:
-				visit_count = 0
-		else:
-				visit_count = int(visit_count)
-
-		return render_template('index.html', visit_count=visit_count, logged_in=True, username=username)
+		# increment the visit count for the logged0in user
+		r.zincrby('leaderboard', 1, username)
+		visit_count = r.zscore('leaderboard', username)
+		return render_template('index.html', visit_count=int(visit_count), logged_in=True, username=username)
 	else:
 		return render_template('index.html', visit_count=0, logged_in=False)
 
@@ -41,8 +38,18 @@ def login():
 
 @app.route('/reset')
 def reset():
-  r.set('visit_count', 0)
+  if 'username' in session:
+    username = session['username']
+    # reset the visit count for the logged-in user
+    r.zadd('leaderboard', { username: 0 })
   return redirect(url_for('home'))
+
+@app.route('/leaderboard')
+def leaderboard():
+	# Get the top 5 users from the leaderboard
+	top_users = r.zrevrange('leaderboard', 0, 4, withscores=True)
+	leaderboard = [{ 'username': user.decode('utf-8'), 'visit_count': int(score) } for user, score in top_users]
+	return render_template('leaderboard.html', leaderboard=leaderboard)
 
 @app.route('/test_redis')
 def test_redis():
