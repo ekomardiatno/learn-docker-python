@@ -46,10 +46,30 @@ def reset():
 
 @app.route('/leaderboard')
 def leaderboard():
+  # Get the current page number from the query string (default is 1)
+  page = int(request.args.get('page', 1))
+  per_page = 5
+  
+  # calculate start and end indices for redis
+  start = (page - 1) * per_page
+  end = start + per_page - 1
+  
 	# Get the top 5 users from the leaderboard
-	top_users = r.zrevrange('leaderboard', 0, 4, withscores=True)
-	leaderboard = [{ 'username': user.decode('utf-8'), 'visit_count': int(score) } for user, score in top_users]
-	return render_template('leaderboard.html', leaderboard=leaderboard)
+  top_users = r.zrevrange('leaderboard', start, end, withscores=True)
+  
+	# convert the redis data into a list of dictionaries
+  leaderboard = [{ 'username': user.decode('utf-8'), 'visit_count': int(score) } for user, score in top_users]
+  
+	# get the total number of users in the leaderboard
+  total_users = r.zcard('leaderboard')
+  total_pages = (total_users + per_page - 1) // per_page # calculate total pages
+  
+  return render_template(
+    'leaderboard.html',
+    leaderboard=leaderboard,
+    current_page=page,
+    total_pages=total_pages
+  )
 
 @app.route('/test_redis')
 def test_redis():
