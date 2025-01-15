@@ -2,6 +2,12 @@ services:
   web:
     build:
       context: .
+    command: python app.py
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./app
+          target: /app
     ports:
       - "5000:5000"
     depends_on:

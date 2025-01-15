@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, session
 import redis
 from flask_session import Session
+import os
 
 app = Flask(__name__)
 
@@ -15,6 +16,8 @@ app.config['SESSION_REDIS'] = redis.StrictRedis(host='redis', port=6379)
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 Session(app)
+
+flask_env = os.environ['FLASK_ENV']
 
 @app.route('/')
 def home():
@@ -85,4 +88,4 @@ def logout():
 	return redirect(url_for('home'))
 
 if __name__ == '__main__':
-  app.run(host='0.0.0.0', port=5000)
+  app.run(host='0.0.0.0', port=5000, debug=True if flask_env == 'development' else False)
