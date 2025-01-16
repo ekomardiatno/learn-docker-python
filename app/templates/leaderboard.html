@@ -57,5 +57,30 @@
 			</nav>
       <a href="/" class="btn btn-primary mt-3">Back to Home</a>
     </div>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+      const socket = io.connect('http://' + document.domain + ':' + location.port)
+
+      socket.on('update_leaderboard', function(data) {
+        const leaderboardTable = document.querySelector('tbody');
+        leaderboardTable.innerHTML = ''; // Clear existing rows
+
+        let params = new URL(document.location.toString()).searchParams;
+        let page = params.get("page") ?? 1
+
+        // Sort the leaderboard by score (highest first)
+        data.leaderboard.sort((a, b) => b.visit_count - a.visit_count);
+
+        // Render the sorted leaderboard
+        data.leaderboard.slice((page - 1) * 5, page * 5).forEach((user, index) => {
+          const row = `<tr>
+            <td>${index + 1}</td>
+            <td>${user.username}</td>
+            <td>${user.visit_count}</td>
+          </tr>`;
+          leaderboardTable.innerHTML += row;
+        });
+      })
+    </script>
   </body>
 </html>

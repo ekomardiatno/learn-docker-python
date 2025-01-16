@@ -2,13 +2,16 @@ from flask import Flask, render_template, redirect, url_for, request, session
 import redis
 from flask_session import Session
 import os
+from flask_socketio import SocketIO, emit
+
+flask_env = os.getenv('FLASK_ENV')
 
 app = Flask(__name__)
+# Secret key for session management
+app.secret_key = os.urandom(24)
 
 # connect to redis
 r = redis.Redis(host='redis', port=6379, db=0)
-# Secret key for session management
-app.secret_key = 'supersecretkey'
 
 # Setup Flask-Session to use Redis as a backend
 app.config['SESSION_TYPE'] = 'redis'
@@ -17,19 +20,42 @@ app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 Session(app)
 
-flask_env = os.environ['FLASK_ENV']
+socketio = SocketIO(app)
+connected_users = {}
+
+@socketio.on('connect')
+def handle_connect():
+	connected_users[request.sid] = {'username': None}
+	print(f"New connection: {request.sid}")
+
+@socketio.on('set_username')
+def set_username(data):
+	connected_users[request.sid]['username'] = data['username']
+
+@socketio.on('disconnect')
+def handle_disconnect():
+	print(f"Client disconnected: {request.sid}")
+	connected_users.pop(request.sid, None)
 
 @app.route('/')
 def home():
 	if 'username' in session:
-		# Get and increase the current user's visit count from Redis
 		username = session['username']
-		# increment the visit count for the logged0in user
-		r.zincrby('leaderboard', 1, username)
-		visit_count = r.zscore('leaderboard', username)
-		return render_template('index.html', visit_count=int(visit_count), logged_in=True, username=username)
+		previous_score = r.zscore('leaderboard', username) or 0
+		updated_score = r.zincrby('leaderboard', 1, username)
+
+		# Emit leaderboard update only if the score changed
+		if updated_score > previous_score:
+			leaderboard_data = get_leaderboard_data()
+			socketio.emit('update_leaderboard', {'leaderboard': leaderboard_data})
+
+		return render_template('index.html', visit_count=int(updated_score), logged_in=True, username=username)
 	else:
 		return render_template('index.html', visit_count=0, logged_in=False)
+
+def get_leaderboard_data():
+	top_users = r.zrevrange('leaderboard', 0, 9, withscores=True)
+	return [{'username': user.decode('utf-8'), 'visit_count': int(score)} for user, score in top_users]
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -88,4 +114,5 @@ def logout():
 	return redirect(url_for('home'))
 
 if __name__ == '__main__':
-  app.run(host='0.0.0.0', port=5000, debug=True if flask_env == 'development' else False)
+	import eventlet
+	socketio.run(app, host='0.0.0.0', port=5000, debug=True if flask_env == 'development' else False)

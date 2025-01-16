@@ -1,3 +1,5 @@
 flask
 flask-session
 redis
+flask-socketio
+eventlet
