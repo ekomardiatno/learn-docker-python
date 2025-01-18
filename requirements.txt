@@ -3,3 +3,5 @@ flask-session==0.8.0
 redis==5.2.1
 flask-socketio==5.5.1
 eventlet==0.38.2
+psycopg==3.2.4
+psycopg-binary==3.2.4

@@ -1,16 +1,31 @@
 from flask import Blueprint, current_app as app, render_template, session, redirect, url_for
 from app.models.leaderboard_models import get_leaderboard_data
+from app.database import conn
 
 main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def home():
   if 'username' in session:
-    redis = app.redis
     socketio = app.socketio
     username = session['username']
-    previous_score = redis.zscore('leaderboard', username) or 0
-    updated_score = redis.zincrby('leaderboard', 1, username)
+    with conn.cursor() as db:
+      db.execute(f'''
+        SELECT visit_count
+        FROM leaderboard
+        WHERE username='{username}'
+      ''')
+      result = db.fetchone()
+      previous_score = result[0] if result else 0
+      db.execute(f'''
+        INSERT INTO leaderboard (username, visit_count)
+        VALUES ('{username}', 1)
+        ON CONFLICT (username)
+        DO UPDATE SET visit_count = leaderboard.visit_count + 1
+        RETURNING visit_count
+      ''')
+      updated_score = db.fetchone()[0]
+      conn.commit()
 
     # Emit leaderboard update only if the score changed
     if updated_score > previous_score:
@@ -24,8 +39,12 @@ def home():
 @main_bp.route('/reset')
 def reset():
   if 'username' in session:
-    redis = app.redis
     username = session['username']
     # reset the visit count for the logged-in user
-    redis.zadd('leaderboard', { username: 0 })
+    with conn.cursor() as db:
+      db.execute(f'''
+        UPDATE leaderboard SET visit_count=0
+        WHERE username='{username}'
+      ''')
+      conn.commit()
   return redirect(url_for('main.home'))

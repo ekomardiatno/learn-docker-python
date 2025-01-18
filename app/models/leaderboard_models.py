@@ -1,6 +1,12 @@
 from flask import current_app as app
+from app.database import conn
 
 def get_leaderboard_data():
-  redis = app.redis
-  top_users = redis.zrevrange('leaderboard', 0, 9, withscores=True)
-  return [{'username': user, 'visit_count': int(score)} for user, score in top_users]
+  with conn.cursor() as db:
+    db.execute('''
+      SELECT username, visit_count
+      FROM leaderboard
+      ORDER BY visit_count DESC
+    ''')
+    results = db.fetchall()
+    return [{'username': row[0], 'visit_count': row[1]} for row in results]

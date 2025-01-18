@@ -3,8 +3,13 @@ import os
 from flask_session import Session
 from flask_socketio import SocketIO
 import redis
+from .database import close_db_connection, initialize_db
+import atexit
 
 def create_app():
+  initialize_db()
+  atexit.register(close_db_connection)
+
   app = Flask(__name__)
   app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')
 
