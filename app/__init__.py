@@ -30,11 +30,12 @@ def create_app():
   app.socketio = socketio
 
   # import and register blueprint
-  from .routes.auth_routes import auth_bp
+  from .routes.auth_routes import auth_bp, google_bp
   from .routes.main_routes import main_bp
   from .routes.leaderboard_routes import leaderboard_bp
   app.register_blueprint(auth_bp)
   app.register_blueprint(main_bp)
   app.register_blueprint(leaderboard_bp)
+  app.register_blueprint(google_bp)
 
   return app

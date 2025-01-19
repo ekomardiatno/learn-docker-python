@@ -2,7 +2,7 @@
 # import os
 
 # app = Flask(__name__)
-# host = os.getenv('POSTGRES_HOST', 'local')
+# host = os.getenv('GOOGLE_CLIENT_ID', 'YOUR_GOOGLE_CLIENT_ID')
 
 # @app.route('/')
 # def home():
